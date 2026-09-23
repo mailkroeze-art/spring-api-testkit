@@ -190,6 +190,12 @@ public class TestCaseGenerator {
                 expectedStatus, setupOperationId);
     }
 
+    /**
+     * Verzamelt alle body- en query-velden die kandidaat zijn voor WRONG_TYPE/BOUNDARY/INVALID_ENUM/
+     * INVALID_FORMAT-tests. Pad-parameters (bijv. het id in "/pets/{petId}") doen hier bewust NIET
+     * aan mee: het vervangen van een pad-parameter door een ongeldige waarde levert al een aparte,
+     * betekenisvollere test op (NOT_FOUND), en verder fuzzen van het pad zou vooral ruis geven.
+     */
     private List<Field> collectFields(OperationModel operation) {
         List<Field> fields = new ArrayList<>();
         operation.requestBody().ifPresent(requestBody -> {

@@ -6,6 +6,11 @@ import io.restassured.response.Response;
 /**
  * Bouwt foutmeldingen die altijd tonen: endpoint + methode, operationId, casetype,
  * de verstuurde request en de verwachte versus werkelijke uitkomst.
+ *
+ * <p><b>Beveiliging:</b> deze klasse toont bewust alleen pathParams, queryParams en de body --
+ * nooit de HTTP-headers. Zo lekt een Authorization- of API-sleutel-header nooit mee in een
+ * testfoutmelding of in build-/CI-logs, ook niet als de authenticatie zelf de oorzaak van de
+ * mislukte test is (zie {@link AuthResolver}).
  */
 public final class TestFailureReporter {
 

@@ -6,6 +6,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Eén "operation" uit de OpenAPI-spec: één combinatie van HTTP-methode en pad, bijvoorbeeld
+ * {@code POST /pets}. Dit is de genormaliseerde, opgeschoonde versie van wat er in de YAML stond --
+ * de rest van het framework hoeft nooit meer met de ruwe swagger-parser-objecten te werken.
+ *
+ * @param operationId         de unieke naam van deze operation uit de spec (bijv. "createPet")
+ * @param httpMethod          de HTTP-methode in hoofdletters (GET, POST, ...)
+ * @param path                het URL-pad met eventuele {@code {parameter}}-placeholders
+ * @param tags                de OpenAPI-tags waarmee deze operation gegroepeerd is (bepaalt de klassenaam bij codegen)
+ * @param parameters          alle pad-, query- en headerparameters
+ * @param requestBodyValue    de request body, of {@code null} als deze operation er geen heeft (gebruik {@link #requestBody()})
+ * @param responses           alle gedocumenteerde responses, per statuscode
+ * @param securitySchemeNames de beveiligingsschema's die voor deze operation gelden (leeg = geen beveiliging)
+ */
 public record OperationModel(
         String operationId,
         String httpMethod,
