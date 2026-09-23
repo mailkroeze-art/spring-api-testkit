@@ -1,0 +1,31 @@
+# baseUrl: het adres waar de API draait tijdens het testen.
+# Overschrijfbaar via de omgevingsvariabele API_BASE_URL of het argument -Dapi.baseUrl.
+baseUrl: http://localhost:8080
+
+# auth: hoe het framework zich moet aanmelden bij beveiligde endpoints.
+auth:
+  # type: bearer, basic of apiKey.
+  type: apiKey
+  # headerName: de headernaam waarin de apiKey wordt meegestuurd (alleen bij type apiKey).
+  headerName: X-API-Key
+  # valueEnv: naam van de omgevingsvariabele die de échte sleutel bevat -- nooit de sleutel zelf hier.
+  valueEnv: PETS_API_KEY
+
+# operations: per operationId instellingen die de automatische generatie overschrijven.
+operations:
+  createPet:
+    # skip: sla deze operatie helemaal over als dit op true staat.
+    skip: false
+    # fixedTestData: gebruik deze vaste waarde in plaats van een automatisch gegenereerde waarde.
+    fixedTestData:
+      name: "Voorbeeldhuisdier"
+  getPetById:
+    # setupDependsOn: voer eerst deze operatie uit en gebruik het 'id'-veld uit die response
+    # als pad-parameter, zodat er een écht bestaand huisdier wordt opgevraagd.
+    setupDependsOn: createPet
+
+# caseTypes: zet hele categorieën testcases aan (true) of uit (false).
+caseTypes:
+  # FORBIDDEN: deze voorbeeld-API documenteert geen 403-response voor createPet, dus deze
+  # categorie levert toch al geen testcases op -- hier expliciet uitgezet als voorbeeld van de syntax.
+  FORBIDDEN: false

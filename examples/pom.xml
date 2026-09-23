@@ -49,6 +49,22 @@
     </dependency>
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- generated/** verwacht een echt draaiende API (zie docs/UITLEG.md) en wordt daarom
+               niet automatisch meegedraaid in mvn test/verify. Compilatie wordt wel altijd gecontroleerd. -->
+          <excludes>
+            <exclude>generated/**</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <profiles>
     <profile>
       <id>generate</id>
