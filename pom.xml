@@ -125,6 +125,12 @@
         <artifactId>test-runner</artifactId>
         <version>${project.version}</version>
       </dependency>
+
+      <dependency>
+        <groupId>dev.apitestkit</groupId>
+        <artifactId>codegen</artifactId>
+        <version>${project.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 

@@ -1,0 +1,128 @@
+openapi: 3.0.3
+info:
+  title: Sample Pet API
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8080
+security:
+  - ApiKeyAuth: []
+paths:
+  /pets:
+    get:
+      operationId: listPets
+      tags: [Pets]
+      summary: Lijst van huisdieren
+      security: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pet"
+    post:
+      operationId: createPet
+      tags: [Pets]
+      summary: Nieuw huisdier aanmaken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewPet"
+            example:
+              name: "Rex"
+              status: "available"
+              email: "owner@example.com"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+        "400":
+          description: Ongeldige aanvraag
+        "401":
+          description: Niet geautoriseerd
+  /pets/{petId}:
+    get:
+      operationId: getPetById
+      tags: [Pets]
+      summary: Eén huisdier ophalen
+      security: []
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+        "404":
+          description: Niet gevonden
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  schemas:
+    NewPet:
+      type: object
+      required:
+        - name
+        - status
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 50
+        status:
+          type: string
+          enum: [available, pending, sold]
+        email:
+          type: string
+          format: email
+        createdAt:
+          type: string
+          format: date-time
+    Pet:
+      type: object
+      required:
+        - id
+        - name
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 2
+          maxLength: 50
+        status:
+          type: string
+          enum: [available, pending, sold]
+        email:
+          type: string
+          format: email
+        createdAt:
+          type: string
+          format: date-time
