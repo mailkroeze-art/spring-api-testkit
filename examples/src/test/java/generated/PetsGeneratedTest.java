@@ -96,66 +96,15 @@ class PetsGeneratedTest {
                 "Geldige aanvraag conform spec",
                 Map.of(),
                 Map.of(),
-                Map.of("status", "available", "name", "Voorbeeldhuisdier", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:33:05.288520899Z"),
+                Map.of("name", "Voorbeeldhuisdier", "status", "available", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:45:54.774876764Z"),
                 AuthMode.VALID,
                 201,
                 null));
     }
 
-    // Ontbrekend verplicht veld: status
-    @Test
-    void createPet_missing_required() {
-        executor.execute(new TestCase(
-                "createPet",
-                "POST",
-                "/pets",
-                TestCaseType.MISSING_REQUIRED,
-                "Ontbrekend verplicht veld: status",
-                Map.of(),
-                Map.of(),
-                Map.of("name", "Voorbeeldhuisdier", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:33:05.288520899Z"),
-                AuthMode.VALID,
-                400,
-                null));
-    }
-
-    // Verkeerd datatype voor status
-    @Test
-    void createPet_wrong_type() {
-        executor.execute(new TestCase(
-                "createPet",
-                "POST",
-                "/pets",
-                TestCaseType.WRONG_TYPE,
-                "Verkeerd datatype voor status",
-                Map.of(),
-                Map.of(),
-                Map.of("status", 1234567, "name", "Voorbeeldhuisdier", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:33:05.288520899Z"),
-                AuthMode.VALID,
-                400,
-                null));
-    }
-
-    // Ongeldige enum-waarde voor status
-    @Test
-    void createPet_invalid_enum() {
-        executor.execute(new TestCase(
-                "createPet",
-                "POST",
-                "/pets",
-                TestCaseType.INVALID_ENUM,
-                "Ongeldige enum-waarde voor status",
-                Map.of(),
-                Map.of(),
-                Map.of("status", "__ONGELDIGE_ENUM_WAARDE__", "name", "Voorbeeldhuisdier", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:33:05.288520899Z"),
-                AuthMode.VALID,
-                400,
-                null));
-    }
-
     // Ontbrekend verplicht veld: name
     @Test
-    void createPet_missing_required_2() {
+    void createPet_missing_required() {
         executor.execute(new TestCase(
                 "createPet",
                 "POST",
@@ -164,7 +113,7 @@ class PetsGeneratedTest {
                 "Ontbrekend verplicht veld: name",
                 Map.of(),
                 Map.of(),
-                Map.of("status", "available", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:33:05.288520899Z"),
+                Map.of("status", "available", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:45:54.774876764Z"),
                 AuthMode.VALID,
                 400,
                 null));
@@ -172,7 +121,7 @@ class PetsGeneratedTest {
 
     // Verkeerd datatype voor name
     @Test
-    void createPet_wrong_type_2() {
+    void createPet_wrong_type() {
         executor.execute(new TestCase(
                 "createPet",
                 "POST",
@@ -181,7 +130,7 @@ class PetsGeneratedTest {
                 "Verkeerd datatype voor name",
                 Map.of(),
                 Map.of(),
-                Map.of("status", "available", "name", 1234567, "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:33:05.288520899Z"),
+                Map.of("name", 1234567, "status", "available", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:45:54.774876764Z"),
                 AuthMode.VALID,
                 400,
                 null));
@@ -198,7 +147,7 @@ class PetsGeneratedTest {
                 "Grenswaarde: net op minimum voor name",
                 Map.of(),
                 Map.of(),
-                Map.of("status", "available", "name", "te", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:33:05.288520899Z"),
+                Map.of("name", "te", "status", "available", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:45:54.774876764Z"),
                 AuthMode.VALID,
                 201,
                 null));
@@ -215,7 +164,7 @@ class PetsGeneratedTest {
                 "Grenswaarde: net onder minimum voor name",
                 Map.of(),
                 Map.of(),
-                Map.of("status", "available", "name", "t", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:33:05.288520899Z"),
+                Map.of("name", "t", "status", "available", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:45:54.774876764Z"),
                 AuthMode.VALID,
                 400,
                 null));
@@ -232,7 +181,7 @@ class PetsGeneratedTest {
                 "Grenswaarde: net op maximum voor name",
                 Map.of(),
                 Map.of(),
-                Map.of("status", "available", "name", "teststringteststringteststringteststringteststring", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:33:05.288520899Z"),
+                Map.of("name", "teststringteststringteststringteststringteststring", "status", "available", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:45:54.774876764Z"),
                 AuthMode.VALID,
                 201,
                 null));
@@ -249,7 +198,58 @@ class PetsGeneratedTest {
                 "Grenswaarde: net boven maximum voor name",
                 Map.of(),
                 Map.of(),
-                Map.of("status", "available", "name", "teststringteststringteststringteststringteststringt", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:33:05.288520899Z"),
+                Map.of("name", "teststringteststringteststringteststringteststringt", "status", "available", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:45:54.774876764Z"),
+                AuthMode.VALID,
+                400,
+                null));
+    }
+
+    // Ontbrekend verplicht veld: status
+    @Test
+    void createPet_missing_required_2() {
+        executor.execute(new TestCase(
+                "createPet",
+                "POST",
+                "/pets",
+                TestCaseType.MISSING_REQUIRED,
+                "Ontbrekend verplicht veld: status",
+                Map.of(),
+                Map.of(),
+                Map.of("name", "Voorbeeldhuisdier", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:45:54.774876764Z"),
+                AuthMode.VALID,
+                400,
+                null));
+    }
+
+    // Verkeerd datatype voor status
+    @Test
+    void createPet_wrong_type_2() {
+        executor.execute(new TestCase(
+                "createPet",
+                "POST",
+                "/pets",
+                TestCaseType.WRONG_TYPE,
+                "Verkeerd datatype voor status",
+                Map.of(),
+                Map.of(),
+                Map.of("name", "Voorbeeldhuisdier", "status", 1234567, "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:45:54.774876764Z"),
+                AuthMode.VALID,
+                400,
+                null));
+    }
+
+    // Ongeldige enum-waarde voor status
+    @Test
+    void createPet_invalid_enum() {
+        executor.execute(new TestCase(
+                "createPet",
+                "POST",
+                "/pets",
+                TestCaseType.INVALID_ENUM,
+                "Ongeldige enum-waarde voor status",
+                Map.of(),
+                Map.of(),
+                Map.of("name", "Voorbeeldhuisdier", "status", "__ONGELDIGE_ENUM_WAARDE__", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:45:54.774876764Z"),
                 AuthMode.VALID,
                 400,
                 null));
@@ -266,7 +266,7 @@ class PetsGeneratedTest {
                 "Verkeerd datatype voor email",
                 Map.of(),
                 Map.of(),
-                Map.of("status", "available", "name", "Voorbeeldhuisdier", "email", 1234567, "createdAt", "2026-09-23T20:33:05.288520899Z"),
+                Map.of("name", "Voorbeeldhuisdier", "status", "available", "email", 1234567, "createdAt", "2026-09-23T20:45:54.774876764Z"),
                 AuthMode.VALID,
                 400,
                 null));
@@ -283,7 +283,7 @@ class PetsGeneratedTest {
                 "Ongeldig formaat voor email",
                 Map.of(),
                 Map.of(),
-                Map.of("status", "available", "name", "Voorbeeldhuisdier", "email", "niet-een-emailadres", "createdAt", "2026-09-23T20:33:05.288520899Z"),
+                Map.of("name", "Voorbeeldhuisdier", "status", "available", "email", "niet-een-emailadres", "createdAt", "2026-09-23T20:45:54.774876764Z"),
                 AuthMode.VALID,
                 400,
                 null));
@@ -300,7 +300,7 @@ class PetsGeneratedTest {
                 "Verkeerd datatype voor createdAt",
                 Map.of(),
                 Map.of(),
-                Map.of("status", "available", "name", "Voorbeeldhuisdier", "email", "gebruiker@voorbeeld.nl", "createdAt", 1234567),
+                Map.of("name", "Voorbeeldhuisdier", "status", "available", "email", "gebruiker@voorbeeld.nl", "createdAt", 1234567),
                 AuthMode.VALID,
                 400,
                 null));
@@ -317,7 +317,7 @@ class PetsGeneratedTest {
                 "Ongeldig formaat voor createdAt",
                 Map.of(),
                 Map.of(),
-                Map.of("status", "available", "name", "Voorbeeldhuisdier", "email", "gebruiker@voorbeeld.nl", "createdAt", "niet-een-datumtijd"),
+                Map.of("name", "Voorbeeldhuisdier", "status", "available", "email", "gebruiker@voorbeeld.nl", "createdAt", "niet-een-datumtijd"),
                 AuthMode.VALID,
                 400,
                 null));
@@ -334,7 +334,7 @@ class PetsGeneratedTest {
                 "Aanvraag zonder credentials",
                 Map.of(),
                 Map.of(),
-                Map.of("status", "available", "name", "Voorbeeldhuisdier", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:33:05.288520899Z"),
+                Map.of("name", "Voorbeeldhuisdier", "status", "available", "email", "gebruiker@voorbeeld.nl", "createdAt", "2026-09-23T20:45:54.774876764Z"),
                 AuthMode.NONE,
                 401,
                 null));
@@ -375,6 +375,7 @@ class PetsGeneratedTest {
     }
 
     // <<< EINDE GEGENEREERD BLOK
+
 
     // Voeg hieronder je eigen tests toe -- deze blijven behouden bij opnieuw genereren.
 
