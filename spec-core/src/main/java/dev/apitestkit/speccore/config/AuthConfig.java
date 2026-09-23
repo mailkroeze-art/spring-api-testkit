@@ -1,5 +1,7 @@
 package dev.apitestkit.speccore.config;
 
+import dev.apitestkit.speccore.util.OrderedMaps;
+
 import java.util.Map;
 
 /**
@@ -11,6 +13,6 @@ public record AuthConfig(
         Map<String, String> settings
 ) {
     public AuthConfig {
-        settings = settings == null ? Map.of() : Map.copyOf(settings);
+        settings = OrderedMaps.copyOf(settings);
     }
 }

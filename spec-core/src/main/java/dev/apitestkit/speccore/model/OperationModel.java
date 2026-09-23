@@ -1,5 +1,7 @@
 package dev.apitestkit.speccore.model;
 
+import dev.apitestkit.speccore.util.OrderedMaps;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,7 +19,7 @@ public record OperationModel(
     public OperationModel {
         tags = tags == null ? List.of() : List.copyOf(tags);
         parameters = parameters == null ? List.of() : List.copyOf(parameters);
-        responses = responses == null ? Map.of() : Map.copyOf(responses);
+        responses = OrderedMaps.copyOf(responses);
         securitySchemeNames = securitySchemeNames == null ? List.of() : List.copyOf(securitySchemeNames);
     }
 

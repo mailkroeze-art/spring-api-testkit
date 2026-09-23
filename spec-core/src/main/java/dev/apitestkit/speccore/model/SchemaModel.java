@@ -1,5 +1,7 @@
 package dev.apitestkit.speccore.model;
 
+import dev.apitestkit.speccore.util.OrderedMaps;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +21,7 @@ public record SchemaModel(
 ) {
     public SchemaModel {
         required = required == null ? List.of() : List.copyOf(required);
-        properties = properties == null ? Map.of() : Map.copyOf(properties);
+        properties = OrderedMaps.copyOf(properties);
         enumValues = enumValues == null ? List.of() : List.copyOf(enumValues);
     }
 

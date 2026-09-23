@@ -1,5 +1,7 @@
 package dev.apitestkit.speccore.config;
 
+import dev.apitestkit.speccore.util.OrderedMaps;
+
 import java.util.Map;
 
 public record OperationOverride(
@@ -9,8 +11,8 @@ public record OperationOverride(
         String setupDependsOn
 ) {
     public OperationOverride {
-        expectedStatusOverrides = expectedStatusOverrides == null ? Map.of() : Map.copyOf(expectedStatusOverrides);
-        fixedTestData = fixedTestData == null ? Map.of() : Map.copyOf(fixedTestData);
+        expectedStatusOverrides = OrderedMaps.copyOf(expectedStatusOverrides);
+        fixedTestData = OrderedMaps.copyOf(fixedTestData);
     }
 
     public static OperationOverride empty() {

@@ -1,5 +1,7 @@
 package dev.apitestkit.speccore.generate;
 
+import dev.apitestkit.speccore.util.OrderedMaps;
+
 import java.util.Map;
 
 public record TestCase(
@@ -22,8 +24,8 @@ public record TestCase(
     public static final String SETUP_PLACEHOLDER = "{{fromSetup}}";
 
     public TestCase {
-        pathParams = pathParams == null ? Map.of() : Map.copyOf(pathParams);
-        queryParams = queryParams == null ? Map.of() : Map.copyOf(queryParams);
+        pathParams = OrderedMaps.copyOf(pathParams);
+        queryParams = OrderedMaps.copyOf(queryParams);
     }
 
     public boolean requiresSetup() {

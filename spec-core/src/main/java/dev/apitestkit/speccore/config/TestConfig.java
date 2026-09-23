@@ -1,5 +1,7 @@
 package dev.apitestkit.speccore.config;
 
+import dev.apitestkit.speccore.util.OrderedMaps;
+
 import java.util.Map;
 import java.util.Optional;
 
@@ -10,8 +12,8 @@ public record TestConfig(
         Map<String, Boolean> caseTypesEnabled
 ) {
     public TestConfig {
-        operationOverrides = operationOverrides == null ? Map.of() : Map.copyOf(operationOverrides);
-        caseTypesEnabled = caseTypesEnabled == null ? Map.of() : Map.copyOf(caseTypesEnabled);
+        operationOverrides = OrderedMaps.copyOf(operationOverrides);
+        caseTypesEnabled = OrderedMaps.copyOf(caseTypesEnabled);
     }
 
     public static TestConfig defaults() {
