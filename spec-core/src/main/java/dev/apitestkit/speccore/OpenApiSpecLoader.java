@@ -22,6 +22,7 @@ import io.swagger.v3.parser.OpenAPIV3Parser;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,18 +30,32 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Leest een OpenAPI 3.x YAML-bestand in en zet het om naar het interne, genormaliseerde SpecModel.
  * $refs worden volledig geresolved door swagger-parser (resolveFully), zodat de rest van het
  * framework nooit met $ref-verwijzingen te maken krijgt.
+ *
+ * <p><b>Beveiliging:</b> swagger-parser haalt een $ref die naar een externe URL wijst (http/https/ftp)
+ * automatisch op tijdens het parsen. Zonder controle zou een kwaadwillende spec zo het framework
+ * kunnen misbruiken om (ongewild, namens jou) verzoeken te sturen naar willekeurige interne of
+ * externe adressen -- dit heet Server-Side Request Forgery (SSRF). Deze loader weigert daarom elk
+ * spec-bestand met een $ref naar een externe URL, vóórdat er ook maar iets wordt opgehaald. Lokale
+ * $refs (naar een ander bestand op schijf, of naar een fragment binnen dezelfde spec) blijven gewoon
+ * werken.
  */
 public class OpenApiSpecLoader {
+
+    private static final Pattern REMOTE_REF_PATTERN =
+            Pattern.compile("\\$ref\\s*:\\s*[\"']?(https?|ftps?|wss?)://", Pattern.CASE_INSENSITIVE);
 
     public SpecModel load(Path specPath) {
         if (!Files.exists(specPath)) {
             throw new SpecLoadException("OpenAPI-specbestand niet gevonden: " + specPath.toAbsolutePath());
         }
+
+        rejectRemoteRefs(specPath);
 
         ParseOptions options = new ParseOptions();
         options.setResolve(true);
@@ -59,6 +74,27 @@ public class OpenApiSpecLoader {
         List<OperationModel> operations = convertOperations(openApi, globalSecuritySchemeNames);
 
         return new SpecModel(operations, securitySchemes);
+    }
+
+    /**
+     * Leest het bestand als platte tekst en zoekt naar `$ref: "http(s)://..."`-achtige verwijzingen,
+     * nog vóórdat swagger-parser ook maar iets probeert op te halen. Zie de klasse-Javadoc hierboven
+     * voor de reden (SSRF-preventie).
+     */
+    private void rejectRemoteRefs(Path specPath) {
+        String content;
+        try {
+            content = Files.readString(specPath);
+        } catch (IOException e) {
+            throw new SpecLoadException("Kon OpenAPI-specbestand niet lezen: " + specPath.toAbsolutePath(), e);
+        }
+        if (REMOTE_REF_PATTERN.matcher(content).find()) {
+            throw new SpecLoadException(
+                    "Deze spec bevat een $ref naar een externe URL. Dat wordt geweigerd om te voorkomen "
+                            + "dat het framework tijdens het inlezen ongewild verzoeken stuurt naar een extern "
+                            + "of intern adres (SSRF). Gebruik alleen $refs naar lokale bestanden of fragmenten "
+                            + "binnen dezelfde spec (bijvoorbeeld \"#/components/schemas/Pet\").");
+        }
     }
 
     private Map<String, SecuritySchemeModel> convertSecuritySchemes(OpenAPI openApi) {

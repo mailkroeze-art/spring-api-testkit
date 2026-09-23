@@ -121,4 +121,14 @@ class OpenApiSpecLoaderTest {
 
         assertThat(example).isPresent();
     }
+
+    @Test
+    void weigertSpecMetExterneRefOmSsrfTeVoorkomen() {
+        Path specWithRemoteRef = Path.of("src/test/resources/fixtures/remote-ref-spec.yaml");
+
+        assertThatThrownBy(() -> new OpenApiSpecLoader().load(specWithRemoteRef))
+                .isInstanceOf(SpecLoadException.class)
+                .hasMessageContaining("externe")
+                .hasMessageContaining("$ref");
+    }
 }

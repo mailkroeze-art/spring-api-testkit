@@ -1,0 +1,15 @@
+openapi: 3.0.3
+info:
+  title: Spec met een externe $ref (moet geweigerd worden)
+  version: "1.0.0"
+paths:
+  /widgets:
+    get:
+      operationId: listWidgets
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "http://169.254.169.254/latest/meta-data/"
