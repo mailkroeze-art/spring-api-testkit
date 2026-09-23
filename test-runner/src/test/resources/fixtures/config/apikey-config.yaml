@@ -1,0 +1,5 @@
+baseUrl: http://localhost:8080
+auth:
+  type: apiKey
+  headerName: X-API-Key
+  valueEnv: TESTKIT_API_KEY
