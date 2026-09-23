@@ -112,6 +112,47 @@ Standaard: Surefire XML-rapporten onder `target/surefire-reports`. Optioneel: Al
 (`allure-junit5` staat al op het klassenpad) -- resultaten komen in `target/allure-results`;
 bekijk ze met de losstaande Allure-CLI (`allure serve target/allure-results`).
 
+## Beveiliging en databescherming
+
+Dit framework draait volledig lokaal (of in jouw eigen CI) en stuurt zelf niets naar externe
+diensten. Er zit geen telemetrie, geen "check for updates"-aanroep en geen analytics in. De enige
+netwerkcall die het framework maakt, is de aanroep naar de `baseUrl` van **jouw eigen API** --
+precies het adres dat jij in `test-config.yaml` of via `-Dapi.baseUrl` opgeeft.
+
+**Jouw OpenAPI-spec en test-config.yaml blijven lokaal.** Ze worden alleen van schijf gelezen en
+in het geheugen verwerkt; er wordt niets van de inhoud (endpoints, schema's, voorbeeldwaarden)
+ergens naartoe verzonden, gelogd naar een extern systeem, of in telemetrie verpakt.
+
+**Wat je zelf in de gaten moet houden:**
+
+- **Geen secrets in `test-config.yaml` of in de spec.** `auth.tokenEnv` / `usernameEnv` /
+  `passwordEnv` / `valueEnv` zijn bewust alleen *namen van omgevingsvariabelen* -- nooit de
+  waarden zelf. Zet ook geen echte wachtwoorden, tokens of klantgegevens in `fixedTestData`: die
+  waarden komen letterlijk terug in testfoutmeldingen (dus ook in CI-logs) én in gegenereerde,
+  te committen Java-bestanden (zie `-Pgenerate`).
+- **Voordat je een spec of `test-config.yaml` naar een (publieke) repo pusht:** controleer of er
+  geen interne hostnamen, klantnamen of productiegegevens in staan. Gebruik voor een openbare repo
+  altijd een voorbeeld-/dummyspec, zoals `examples/openapi.yaml` in dit project.
+- **SSRF-bescherming:** OpenAPI-specs kunnen `$ref`-verwijzingen naar externe URL's bevatten.
+  Zonder controle zou het inlezen van zo'n spec het framework kunnen laten verzoeken sturen naar
+  een willekeurig (mogelijk intern) adres. `OpenApiSpecLoader` **weigert daarom elke spec met een
+  `$ref` naar een externe URL** (http/https/ftp/ws), vóórdat er iets wordt opgehaald -- ongeacht of
+  je de spec via `-Dopenapi.spec` inleest, tests genereert (`-Pgenerate`), of via `ApiTestFactory`
+  draait. Lokale `$refs` (naar een ander bestand, of een fragment binnen dezelfde spec) blijven
+  gewoon werken.
+- **Geen headers in foutmeldingen.** `TestFailureReporter` toont bewust alleen pathParams,
+  queryParams en de body van een mislukte aanvraag -- nooit de HTTP-headers. Een Authorization- of
+  API-sleutel-header lekt dus nooit mee in een testrapport, ook niet als de authenticatie zelf de
+  oorzaak van de mislukking is.
+- **YAML-parsing is veilig ingericht.** `test-config.yaml` wordt gelezen met SnakeYAML's
+  `compose()`, die alleen een boomstructuur van de tekst opbouwt en nooit automatisch Java-objecten
+  instantieert op basis van tags in het bestand (dat laatste is de bekende SnakeYAML-kwetsbaarheid
+  die dit framework dus niet raakt). SnakeYAML 2.x beschermt bovendien standaard tegen
+  "billion laughs"-achtige YAML-bommen (buitensporige alias/anchor-expansie).
+- **Draai `mvn org.owasp:dependency-check-maven:check`** (niet standaard meegeleverd) als je
+  periodiek wilt controleren op nieuw ontdekte kwetsbaarheden in de gebruikte bibliotheken
+  (swagger-parser, REST Assured, swagger-request-validator, ...).
+
 ## Beperkingen
 
 - Path-parameters worden niet automatisch gefuzzed op verkeerd type/formaat/grenswaarde -- alleen

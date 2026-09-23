@@ -358,3 +358,95 @@ casetypes aan, geen overrides.
 **Mag ik de gegenereerde bestanden in `src/test/java/generated` aanpassen?**
 Ja, dat is precies de bedoeling -- zie hoofdstuk 6. Alleen het stuk tussen de markers wordt
 overschreven bij het opnieuw genereren.
+
+## 8. Alle onderdelen van dit framework, in gewone taal
+
+Je hoeft geen code te kunnen lezen om te snappen wat er onder de motorkap gebeurt. Hieronder staat
+elk onderdeel, alsof het een medewerker in een fabriek is die zijn eigen taakje doet.
+
+### De map `spec-core` -- "leest de spec en bedenkt de tests"
+
+- **OpenApiSpecLoader** -- de eerste die de spec in handen krijgt. Leest het YAML-bestand, checkt
+  of het geen gevaarlijke externe verwijzingen bevat (zie hoofdstuk 9), en zet alles om in een
+  overzichtelijke, interne beschrijving die de rest van het framework begrijpt.
+- **TestConfigLoader** -- leest jouw `test-config.yaml` en controleert hem meteen: klopt elke
+  operationId, ken ik elke sleutel? Zo niet, dan krijg je direct een duidelijke foutmelding met
+  bestandsnaam en regelnummer (zie hoofdstuk 4).
+- **ExampleValueGenerator** -- de "verzinner". Bedenkt voorbeeldwaarden voor elk veld: een geldige
+  naam, een geldig e-mailadres, een getal precies op de grens, of juist een bewust foute waarde.
+- **TestCaseGenerator** -- de "planner". Bepaalt, op basis van je spec én je `test-config.yaml`,
+  wélke tests er precies gemaakt moeten worden, en roept daarvoor de verzinner (hierboven) aan.
+- De overige bestanden in deze map (`OperationModel`, `SchemaModel`, `TestCase`, ...) zijn simpele
+  "invulformulieren" die de tussenresultaten netjes vasthouden, bijvoorbeeld "dit is één endpoint"
+  of "dit is één testcase". Ze doen zelf niets bijzonders, ze bewaren alleen gegevens.
+
+### De map `test-runner` -- "voert de tests echt uit"
+
+- **ApiTestFactory** -- de "starter". Dit is het onderdeel dat JUnit aanroept: "geef me de spec en
+  de config, en ik genereer en draai de tests".
+- **TestCaseExecutor** -- de "uitvoerder". Stuurt het daadwerkelijke HTTP-verzoek naar je API, en
+  controleert of het antwoord klopt: zowel de statuscode als de vorm van de data.
+- **AuthResolver** -- de "inlogger". Zet de juiste inloggegevens op een verzoek (of juist expres
+  foute, om te testen of je API dat weigert).
+- **TestFailureReporter** -- de "verslaggever". Maakt van een mislukte test een duidelijk verhaal:
+  wat werd er verstuurd, wat werd er verwacht, wat kwam er terug (zie hoofdstuk 3).
+
+### De map `codegen` -- "schrijft de tests op papier"
+
+- **CodegenMain** -- het startpunt van het commando `-Pgenerate` (zie stap 5 in hoofdstuk 2).
+- **GeneratedTestClassWriter** -- schrijft een leesbaar Java-bestand per groep endpoints, en zorgt
+  ervoor dat jouw eigen toevoegingen daaraan bewaard blijven (zie hoofdstuk 6).
+- **JavaLiteralRenderer** -- een klein hulpje dat waarden (tekst, getallen, lijstjes) omzet naar
+  geldige Java-code, zodat het gegenereerde bestand meteen werkt.
+
+### De map `examples` -- "een kant-en-klaar voorbeeld"
+
+- **openapi.yaml** -- een verzonnen, veilige voorbeeldspec (een "dierenwinkel"-API) zonder enige
+  echte of gevoelige data.
+- **test-config.yaml** -- een volledig ingevuld voorbeeld van de override, met uitleg per regel
+  (zie hoofdstuk 4).
+- **ExamplesEndToEndTest** -- een test die laat zien dat het hele plaatje werkt, met een nep-server
+  erbij zodat je niets zelf hoeft op te starten.
+- **generated/PetsGeneratedTest.java** -- het resultaat van `-Pgenerate` op de voorbeeldspec, als
+  voorbeeld van wat jij ook in jouw eigen project krijgt.
+
+### Overige bestanden
+
+- **README.md** -- de technische samenvatting (voor ontwikkelaars).
+- **docs/UITLEG.md** -- dit bestand.
+- **`.github/workflows/verify.yml`** -- laat GitHub automatisch `mvn verify` draaien bij elke
+  wijziging, zodat fouten meteen opvallen.
+- **LICENSE** -- de MIT-licentie: iedereen mag dit framework gratis gebruiken, aanpassen en
+  verspreiden.
+
+## 9. Veiligheid: wat gebeurt er met mijn gegevens?
+
+Een logische zorg als je hier je eigen (bedrijfs-)API-spec in stopt: gaat er iets van die
+informatie naar buiten? Kort antwoord: **nee.**
+
+- Dit framework draait volledig op jouw eigen computer of in jouw eigen CI. Het stuurt niets naar
+  ons, naar de makers van de gebruikte bibliotheken, of naar wie dan ook, behalve naar het adres
+  van **jouw eigen API** dat jij zelf opgeeft (`baseUrl`).
+- Je spec-bestand en `test-config.yaml` worden alleen van schijf gelezen. Er zit geen "checken op
+  updates", geen analytics en geen enkele andere achtergrondverbinding in.
+- OpenAPI-specs kunnen technisch gezien verwijzen (`$ref`) naar bestanden op het internet. Dat zou
+  betekenen dat het inlezen van een spec ongemerkt een verzoek naar een extern (of intern) adres
+  stuurt. Dit framework **weigert dat automatisch**: een spec met een `$ref` naar `http://` of
+  `https://` wordt meteen afgewezen, met een duidelijke foutmelding, nog vóórdat er iets wordt
+  opgehaald. Verwijzingen binnen je eigen spec, of naar een ander lokaal bestand, blijven gewoon
+  werken.
+- Een mislukte test laat je precies zien wat er verstuurd is (zie hoofdstuk 3) -- maar bewust
+  **nooit** de inloggegevens (headers zoals een API-sleutel of een Authorization-token) die daarbij
+  gebruikt zijn. Zo kun je een testrapport gerust delen met een collega zonder dat er een sleutel in
+  meegaat.
+
+**Wat blijft jouw eigen verantwoordelijkheid:**
+
+- Zet nooit een échte wachtwoord- of tokenwaarde in `test-config.yaml` -- alleen de *naam* van een
+  omgevingsvariabele (zie hoofdstuk 4). Diezelfde regel geldt voor `fixedTestData`: die waarden
+  belanden letterlijk in foutmeldingen én in gegenereerde, te committen Java-bestanden.
+- Als je dit framework in een **publieke** repository zet: gebruik dan alleen een voorbeeld- of
+  dummyspec (zoals `examples/openapi.yaml`), nooit je echte, interne API-beschrijving met
+  bedrijfsgevoelige endpoints, klantgegevens of interne adressen.
+- Controleer vóór een eerste push altijd zelf even of er geen wachtwoorden, tokens of interne
+  URL's in je bestanden zijn geslopen (bijvoorbeeld met `git grep`).
