@@ -168,6 +168,11 @@
                 junit.jupiter.execution.parallel.enabled=false
               </configurationParameters>
             </properties>
+            <systemPropertyVariables>
+              <!-- Zonder dit schrijft Allure resultaten naar <module>/allure-results (naast pom.xml)
+                   in plaats van target/allure-results, waardoor `mvn clean` ze niet opruimt. -->
+              <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
+            </systemPropertyVariables>
           </configuration>
         </plugin>
       </plugins>

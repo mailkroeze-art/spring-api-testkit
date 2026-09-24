@@ -92,25 +92,105 @@ gedocumenteerd is in de spec en dat de response-body schema-valide is (via
 
 ## Integratie met een bestaand Spring Boot-project
 
-Voeg `test-runner` (en transitief `spec-core`) toe als test-dependency, en gebruik
-`@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)` met `@LocalServerPort`
-om de daadwerkelijke poort als `-Dapi.baseUrl` door te geven, bijvoorbeeld via een
-`DynamicPropertySource` of door de poort in een systeemproperty te zetten vóór het draaien van
-`ApiTestFactory`. Zie [docs/UITLEG.md](docs/UITLEG.md) voor een concreet voorbeeld.
+Dit framework is nog niet op Maven Central gepubliceerd. Er zijn twee manieren om het toch als
+dependency in een bestaand project te gebruiken; zie
+[docs/UITLEG.md](docs/UITLEG.md#10-gebruiken-in-een-bestaand-spring-boot-project) voor de
+uitgeschreven, stap-voor-stap versie zonder Maven-voorkennis.
 
-Let op: `ApiTestFactory` zelf heeft een klassenaam die niet matcht met de standaard
-Surefire/Failsafe-includepatronen (`*Test`, `*Tests`, ...). Maak in je eigen project een lege
-subklasse met een passende naam, bijvoorbeeld:
+**Optie A -- JitPack (werkt voor iedereen, geen lokale installatiestap nodig).** JitPack bouwt een
+publieke GitHub-repo automatisch en serveert de modules als gewone Maven-dependency's. Getest en
+werkend (een geïsoleerde build met alleen `test-runner` als dependency haalt `spec-core`
+automatisch mee):
+
+```xml
+<repositories>
+  <repository>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
+  </repository>
+</repositories>
+
+<dependencies>
+  <dependency>
+    <groupId>com.github.mailkroeze-art.spring-api-testkit</groupId>
+    <artifactId>test-runner</artifactId>
+    <version>main-SNAPSHOT</version> <!-- of een git-tag/commit-hash voor een vaste versie -->
+    <scope>test</scope>
+  </dependency>
+</dependencies>
+```
+
+**Optie B -- lokaal installeren.** Clone deze repo naast je eigen project en draai eenmalig
+`mvn install` (of `./mvnw install`) in de root van `spring-api-testkit`. Dat plaatst de modules in
+je lokale `~/.m2`-cache onder de "echte" coördinaten (`dev.apitestkit:spec-core:0.1.0-SNAPSHOT`,
+`dev.apitestkit:test-runner:0.1.0-SNAPSHOT`); voeg die dan toe als gewone dependency zonder het
+`<repositories>`-blok. Werkt alleen op machines waar je die installatiestap hebt gedaan (dus ook in
+CI, tenzij je daar dezelfde stap toevoegt) -- voor een team dat dit overal automatisch wil kunnen
+gebruiken is optie A eenvoudiger.
+
+**De verbinding met je draaiende Spring Boot-app.** Gebruik
+`@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)` met `@LocalServerPort`
+om de daadwerkelijke poort als `-Dapi.baseUrl`-systeemproperty te zetten vóórdat `ApiTestFactory`
+zijn tests genereert (dat gebeurt in `@BeforeEach`, want dat draait altijd vóór een `@TestFactory`-
+methode):
 
 ```java
-class GeneratedApiTest extends ApiTestFactory {}
+package com.jouwbedrijf.api;
+
+import dev.apitestkit.testrunner.ApiTestFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class GeneratedApiTest extends ApiTestFactory {
+
+    @LocalServerPort
+    private int port;
+
+    @BeforeEach
+    void wijsNaarDeDraaiendeApp() {
+        System.setProperty("api.baseUrl", "http://localhost:" + port);
+        System.setProperty("openapi.spec", "src/test/resources/openapi.yaml");
+    }
+}
 ```
+
+Let op: `ApiTestFactory.apiTests()` heeft een klassenaam (`ApiTestFactory`) die zelf niet matcht met
+de standaard Surefire-includepatronen (`*Test`, `*Tests`, ...) -- daarom de lege subklasse hierboven
+met een passende naam. Dat werkt gewoon, ook als die subklasse (zoals hier) in een heel ander
+package zit dan `dev.apitestkit.testrunner` -- JUnit 5 vindt de overgeërfde `@TestFactory`-methode
+via reflectie, ook al is hij package-private. Dit patroon is expliciet getest in een apart package
+tijdens de ontwikkeling van dit framework.
 
 ## Rapportage
 
-Standaard: Surefire XML-rapporten onder `target/surefire-reports`. Optioneel: Allure
-(`allure-junit5` staat al op het klassenpad) -- resultaten komen in `target/allure-results`;
-bekijk ze met de losstaande Allure-CLI (`allure serve target/allure-results`).
+Standaard: Surefire XML-rapporten onder `target/surefire-reports`. Allure-resultaten (ruwe JSON)
+komen automatisch in `target/allure-results` terecht -- `allure-junit5` staat al op het
+klassenpad en heeft geen extra configuratie nodig.
+
+Voor het mooie HTML-overzicht heb je twee opties:
+
+- **Zonder iets te installeren:** de `allure-maven`-plugin (al geconfigureerd in `examples/pom.xml`)
+  downloadt de Allure command line tool zelf. Draai `mvn allure:report` (bestand verschijnt op
+  `target/site/allure-maven-plugin/index.html`) of `mvn allure:serve` (genereert en opent meteen in
+  de browser).
+- **Met de losstaande Allure-CLI** (als je die al hebt): `allure serve target/allure-results`.
+
+**Historische runs / trendgrafieken:** dit gebeurt niet automatisch. Allure bouwt een trend op
+basis van een `history`-map die in de vórige rapportgeneratie stond. Om trends te laten
+opbouwen, kopieer je die map terug de resultaten in vóórdat je opnieuw genereert (geverifieerd
+werkend):
+
+```bash
+cp -r target/site/allure-maven-plugin/history target/allure-results/history
+mvn allure:report
+```
+
+Let op: `mvn clean` verwijdert `target/` inclusief een eerder gegenereerd rapport -- doe de
+kopieerstap dus vóór een `clean`, of bewaar de `history`-map ergens anders tussen runs. Voor een
+teambrede trend over CI-runs heen (bijvoorbeeld via GitHub Pages) is extra CI-configuratie nodig;
+dat zit niet standaard in dit project.
 
 ## Beveiliging en databescherming
 

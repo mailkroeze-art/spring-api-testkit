@@ -4,5 +4,6 @@ target/
 .env
 allure-results/
 allure-report/
+.allure/
 *.class
 .DS_Store

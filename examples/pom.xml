@@ -62,6 +62,17 @@
           </excludes>
         </configuration>
       </plugin>
+      <plugin>
+        <!-- Zet target/allure-results om in een HTML-rapport: `mvn allure:report` (bestand in
+             target/site/allure-maven-plugin/index.html) of `mvn allure:serve` (opent meteen in de
+             browser). Downloadt zelf de Allure command line tool, dus je hoeft niets te installeren. -->
+        <groupId>io.qameta.allure</groupId>
+        <artifactId>allure-maven</artifactId>
+        <version>2.15.2</version>
+        <configuration>
+          <reportVersion>2.29.0</reportVersion>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 

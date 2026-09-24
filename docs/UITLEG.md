@@ -1,4 +1,4 @@
-# Uitleg voor iedereen (ook zonder testervaring)
+# Uitleg voor iedereen
 
 Deze pagina legt uit hoe je met **spring-api-testkit** werkt. Je hoeft niets van
 testautomatisering te weten. Korte zinnen. Elk moeilijk woord leggen we bij de eerste keer uit.
@@ -101,13 +101,43 @@ committen (aan git toevoegen) en zelf uitbreiden -- zie hoofdstuk 6.
 ### Stap 6 -- rapport openen
 
 Standaard schrijft Maven een rapport in `target/surefire-reports` (XML-bestanden, vooral handig
-voor CI). Wil je een mooi overzicht in de browser? Dit project heeft `allure-junit5` al aan boord.
-Na een testrun met resultaten in `target/allure-results` kun je (met de losstaande Allure-CLI
-geïnstalleerd) een rapport openen met:
+voor CI, niet fijn leesbaar voor mensen).
+
+Wil je een mooi overzicht in de browser, met kleurtjes, grafiekjes en een lijst van alle tests?
+Dat heet een **Allure-rapport**, en dat zit al ingebouwd -- je hoeft niets te installeren. Ga naar
+de map `examples` en draai:
 
 ```bash
-allure serve target/allure-results
+mvn allure:report
 ```
+
+Op je scherm verschijnt:
+
+```
+Report successfully generated to /pad/naar/examples/target/site/allure-maven-plugin
+```
+
+Open het bestand `examples/target/site/allure-maven-plugin/index.html` in je browser (dubbelklikken
+werkt meestal, of sleep het bestand naar een browservenster). Je ziet dan een overzicht met hoeveel
+tests slaagden, hoeveel er faalden, en je kunt op elke test klikken voor de details.
+
+Liever meteen een rapport dat automatisch opent? Gebruik `mvn allure:serve` in plaats van
+`mvn allure:report`.
+
+**Onthoudt dit ook oude testrondes (trends over tijd)?** Niet automatisch. Een Allure-rapport
+onthoudt standaard alleen de *laatste* keer dat je het genereerde. Wil je een grafiekje zien van
+"hoeveel tests slaagden er vorige week, en hoeveel nu", dan moet je zelf één extra stap doen:
+vóórdat je een nieuw rapport maakt, kopieer je de map met de geschiedenis van het vórige rapport
+terug naar de testresultaten:
+
+```bash
+cp -r target/site/allure-maven-plugin/history target/allure-results/history
+mvn allure:report
+```
+
+Doe je dat niet, dan begint elk rapport weer "op nul". Let ook op: het commando `mvn clean` (of
+`mvn clean verify`) ruimt de map `target` helemaal leeg, inclusief een eerder gemaakt rapport --
+kopieer de `history`-map dus éérst, en run daarna pas `clean`.
 
 ## 3. Rood en groen
 
@@ -450,3 +480,113 @@ informatie naar buiten? Kort antwoord: **nee.**
   bedrijfsgevoelige endpoints, klantgegevens of interne adressen.
 - Controleer vóór een eerste push altijd zelf even of er geen wachtwoorden, tokens of interne
   URL's in je bestanden zijn geslopen (bijvoorbeeld met `git grep`).
+
+## 10. Gebruiken in een bestaand Spring Boot-project
+
+Dit hoofdstuk is voor als je dit framework wilt toevoegen aan een Spring Boot-project dat er al is
+-- met een eigen `pom.xml`, eigen code, eigen team. Ook zonder testervaring moet je hierna begrijpen
+wát er moet gebeuren, ook al plak je de code misschien niet zelf in het project (zie het kadertje
+onderaan).
+
+### Wat is een "dependency", en wat is een pom.xml?
+
+Een Java-project heeft meestal een bestand met de naam `pom.xml`. Dat is een soort
+ingrediëntenlijst: één regel per bouwsteen die het project gebruikt. Zo'n bouwsteen heet een
+**dependency** (Engels voor "afhankelijkheid"): kant-en-klare code die iemand anders al gemaakt
+heeft, en die jij gewoon mag gebruiken zonder hem zelf te schrijven -- vergelijkbaar met een
+voorgebakken pizzabodem die je koopt in plaats van zelf deeg te maken. `spring-api-testkit` is zo'n
+bouwsteen: door hem aan de ingrediëntenlijst toe te voegen, krijgt het project er "kan OpenAPI-tests
+genereren" als vaardigheid bij.
+
+### Stap 1: de bouwsteen toevoegen aan pom.xml
+
+Dit framework staat (nog) niet op de standaard, wereldwijde ingrediëntenwinkel (Maven Central). Er
+zijn twee manieren om hem toch te gebruiken.
+
+**Optie A -- JitPack (aanbevolen, werkt voor iedereen).** JitPack is een gratis dienst die een
+openbare GitHub-repository (zoals deze) automatisch klaarzet als bouwsteen, zonder dat iemand iets
+hoeft te installeren. Dit is getest en werkt. Voeg dit toe aan de `pom.xml` van het bestaande
+project (binnen de bestaande `<project>...</project>`-tags, naast wat er al staat -- niets
+verwijderen):
+
+```xml
+<!-- Vertelt Maven waar het JitPack kan vinden -->
+<repositories>
+  <repository>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
+  </repository>
+</repositories>
+
+<dependencies>
+  <!-- ... hier staan waarschijnlijk al andere dependencies, die blijven gewoon staan ... -->
+
+  <!-- spring-api-testkit: genereert tests uit een OpenAPI-spec -->
+  <dependency>
+    <groupId>com.github.mailkroeze-art.spring-api-testkit</groupId>
+    <artifactId>test-runner</artifactId>
+    <version>main-SNAPSHOT</version>
+    <scope>test</scope>
+  </dependency>
+</dependencies>
+```
+
+**Optie B -- lokaal installeren.** Als je liever niets van internet afhankelijk maakt: download deze
+repository, en draai daarin eenmalig `mvn install`. Dat zet de bouwstenen klaar op de eigen computer.
+Nadeel: dit moet dan op élke computer (en in de CI-server) apart gebeuren. Voor de meeste mensen is
+optie A daarom makkelijker.
+
+### Stap 2: het framework vertellen waar je eigen API draait
+
+Dit is het stukje dat écht code raakt, en waarschijnlijk door een ontwikkelaar gedaan moet worden.
+Maak een nieuw testbestand aan (bijvoorbeeld `GeneratedApiTest.java`) met deze inhoud:
+
+```java
+package com.jouwbedrijf.api;   // <- vervang dit door het package van jouw project
+
+import dev.apitestkit.testrunner.ApiTestFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+
+// Start de echte Spring Boot-applicatie op een willekeurige, vrije poort
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class GeneratedApiTest extends ApiTestFactory {
+
+    // Spring Boot vult dit veld zelf in met de poort waarop de app nu draait
+    @LocalServerPort
+    private int port;
+
+    // Dit draait vlak vóórdat de tests gegenereerd en uitgevoerd worden
+    @BeforeEach
+    void wijsNaarDeDraaiendeApp() {
+        System.setProperty("api.baseUrl", "http://localhost:" + port);
+        System.setProperty("openapi.spec", "src/test/resources/openapi.yaml"); // pad naar jullie spec
+    }
+}
+```
+
+Zet de eigen OpenAPI-spec op het pad dat je hierboven invult (bijvoorbeeld
+`src/test/resources/openapi.yaml`), en eventueel een `test-config.yaml` ernaast (zie hoofdstuk 4).
+
+### Stap 3: draaien
+
+Vanuit de root van het bestaande project:
+
+```bash
+mvn test -Dtest=GeneratedApiTest
+```
+
+Je ziet dezelfde soort uitkomst als in stap 3 van hoofdstuk 2: een lijst van gegenereerde tests,
+groen of rood.
+
+### Als je zelf geen ontwikkelaar bent
+
+Je kunt de bovenstaande twee code-stukjes (het `pom.xml`-stukje en het Java-bestand) gewoon
+doorsturen naar iemand die wél met het project werkt, met de vraag: "kun je dit toevoegen?". Er
+hoeft verder niets aangepast te worden aan de rest van het project -- deze twee stukken zijn
+zelfstandig. Wat je zelf al wél kunt doen zonder ontwikkelaar nodig te hebben:
+
+- De OpenAPI-spec zelf aanleveren of controleren (het YAML-bestand, zie hoofdstuk 1).
+- `test-config.yaml` invullen of aanpassen (zie hoofdstuk 4) -- dat is gewoon tekst, geen Java-code.
+- Een testrapport lezen en begrijpen wat er rood is (zie hoofdstuk 3), en dat teruggeven aan het team.
