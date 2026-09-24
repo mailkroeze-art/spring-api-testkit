@@ -139,6 +139,31 @@ Doe je dat niet, dan begint elk rapport weer "op nul". Let ook op: het commando 
 `mvn clean verify`) ruimt de map `target` helemaal leeg, inclusief een eerder gemaakt rapport --
 kopieer de `history`-map dus éérst, en run daarna pas `clean`.
 
+### Werkt op mijn (bedrijfs)netwerk geen Allure? Dat kan gewoon.
+
+Sommige bedrijven laten je alleen bouwstenen (dependency's, zie hoofdstuk 10) gebruiken die eerst
+zijn goedgekeurd en in een eigen, interne "winkel" (bijvoorbeeld Artifactory of Nexus) staan.
+Allure staat daar soms niet in, en jij mag het misschien niet zelf toevoegen. Geen probleem: dit
+framework werkt hier gewoon zonder.
+
+Zet Allure uit met dit extra stukje achter je commando:
+
+```bash
+mvn clean verify -P!allure-reporting
+```
+
+(Werk je in IntelliJ? Zet `-P!allure-reporting` in het vakje "Command line" van je run-configuratie.)
+
+Alles blijft werken -- je mist dan alleen het mooie Allure-overzicht. Wil je toch een overzichtelijk
+rapport in de browser, zonder Allure? Draai dan dit (gebruikt alleen standaard Maven-onderdelen die
+vrijwel altijd wél beschikbaar zijn):
+
+```bash
+mvn -pl examples surefire-report:report-only
+```
+
+Het rapport staat dan op `examples/target/reports/surefire.html` -- gewoon openen in je browser.
+
 ## 3. Rood en groen
 
 - **Groen** betekent: de test is geslaagd. Je API deed wat de spec beloofde.

@@ -32,10 +32,6 @@
       <artifactId>swagger-request-validator-restassured</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.qameta.allure</groupId>
-      <artifactId>allure-junit5</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
@@ -50,4 +46,24 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <profiles>
+    <profile>
+      <!-- Staat standaard AAN. Draai met -P!allure-reporting als jouw Maven-mirror
+           io.qameta.allure-artefacten niet aanbiedt en je die niet mag/kan toevoegen (bijv. een
+           afgeschermd bedrijfsnetwerk). Zonder Allure werkt alles gewoon door; je mist dan alleen
+           de Allure-rapportage (zie README.md en docs/UITLEG.md voor het alternatief op basis van
+           maven-surefire-report-plugin, dat wel altijd werkt). -->
+      <id>allure-reporting</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>io.qameta.allure</groupId>
+          <artifactId>allure-junit5</artifactId>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 </project>

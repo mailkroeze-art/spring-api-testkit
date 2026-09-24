@@ -192,6 +192,30 @@ kopieerstap dus vóór een `clean`, of bewaar de `history`-map ergens anders tus
 teambrede trend over CI-runs heen (bijvoorbeeld via GitHub Pages) is extra CI-configuratie nodig;
 dat zit niet standaard in dit project.
 
+### Geen toegang tot Allure? (bijv. een afgeschermd bedrijfsnetwerk)
+
+`allure-junit5` (in `test-runner`) zit in een los Maven-profiel `allure-reporting`, dat **standaard
+aan** staat. Als jouw Maven-mirror `io.qameta.allure`-artefacten niet aanbiedt en je die niet mag
+of kan laten toevoegen, schakel je het uit:
+
+```bash
+mvn clean verify -P\!allure-reporting
+```
+
+(In IntelliJ: zet `-P!allure-reporting` in het veld "Command line" van je Run/Debug-configuratie,
+of in Maven-instellingen onder "Profiles" het vinkje bij `allure-reporting` uitzetten.) De rest van
+het framework werkt hierdoor onveranderd door -- er is nergens in de broncode een harde
+afhankelijkheid van Allure-klassen, alleen van de optionele dependency zelf.
+
+Voor een HTML-rapport zonder Allure gebruik je `maven-surefire-report-plugin` (een standaard Apache
+Maven-plugin, vrijwel zeker al aanwezig via elke mirror die Maven Central doorspiegelt):
+
+```bash
+mvn -pl examples surefire-report:report-only
+```
+
+Bestand verschijnt op `examples/target/reports/surefire.html`.
+
 ## Beveiliging en databescherming
 
 Dit framework draait volledig lokaal (of in jouw eigen CI) en stuurt zelf niets naar externe
