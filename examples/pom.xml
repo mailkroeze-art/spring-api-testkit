@@ -55,10 +55,12 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <!-- generated/** verwacht een echt draaiende API (zie docs/UITLEG.md) en wordt daarom
-               niet automatisch meegedraaid in mvn test/verify. Compilatie wordt wel altijd gecontroleerd. -->
+          <!-- generated/** en AdHocApiTest verwachten een echt draaiende API (zie docs/UITLEG.md)
+               en worden daarom niet automatisch meegedraaid in mvn test/verify. Compilatie wordt
+               wel altijd gecontroleerd. -->
           <excludes>
             <exclude>generated/**</exclude>
+            <exclude>**/AdHocApiTest.java</exclude>
           </excludes>
         </configuration>
       </plugin>

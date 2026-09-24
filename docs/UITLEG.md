@@ -164,6 +164,82 @@ mvn -pl examples surefire-report:report-only
 
 Het rapport staat dan op `examples/target/reports/surefire.html` -- gewoon openen in je browser.
 
+### Checklist: een geheel nieuwe, eigen spec testen (klik voor klik)
+
+Dit is het complete stappenplan vanaf het moment dat je een eigen, nieuw OpenAPI-bestand hebt --
+in IntelliJ, met precies waar je moet klikken. Geen Java-kennis nodig: je gebruikt een
+kant-en-klare, lege testklasse (`AdHocApiTest`) die al in dit project zit.
+
+**Wat heb je nodig, vóór je begint?**
+
+1. Dit project (`spring-api-testkit`) open in IntelliJ.
+2. Je eigen OpenAPI-bestand (een `.yaml`-bestand).
+3. Een adres waar de bijbehorende API al draait (bijvoorbeeld `http://localhost:8080`, of een
+   test-omgeving-URL). Zonder een draaiende API kun je nog niets testen -- dit framework verzint
+   geen antwoorden, het stuurt écht verzoeken.
+
+**Stap 1 -- zet je spec in het project**
+
+- Klik in het linker Project-paneel met de rechtermuisknop op de map `examples`.
+- Kies in het menu de optie om de map in de Verkenner te openen (op Windows heet dat meestal
+  **Show in Explorer** of **Open in Explorer**, afhankelijk van je IntelliJ-versie).
+- Sleep je `.yaml`-bestand daar naartoe, bijvoorbeeld met de naam `mijn-api.yaml`. Ga terug naar
+  IntelliJ: het bestand verschijnt vanzelf in de mapstructuur (eventueel na een klik op het
+  ververs-icoontje boven de Project-boom).
+- Kun je die menuoptie niet vinden? Sleep het bestand dan rechtstreeks vanuit de Windows Verkenner
+  naar de map `examples` in het Project-paneel van IntelliJ -- dat werkt net zo goed.
+
+**Stap 2 -- (aanbevolen) maak je eigen test-config.yaml**
+
+- Rechtermuisklik op `examples/test-config.yaml` in de Project-boom -> **Copy** (Ctrl+C), dan
+  rechtermuisklik op de map `examples` -> **Paste** (Ctrl+V). Geef de kopie een naam, bijvoorbeeld
+  `mijn-test-config.yaml`.
+- Dubbelklik het bestand om te openen, en pas `baseUrl` (en eventueel `auth`) aan naar jouw
+  situatie -- zie hoofdstuk 4 voor wat elke regel betekent.
+
+**Stap 3 -- open de kant-en-klare testklasse**
+
+- Ga in de Project-boom naar `examples/src/test/java/dev/apitestkit/examples/adhoc/AdHocApiTest.java`
+  en dubbelklik om te openen. Dit bestand is expres leeg -- je hoeft er niets in te typen.
+
+**Stap 4 -- maak de run-configuratie**
+
+- Klik op het groene driehoekje in de marge naast `class AdHocApiTest` (of rechtermuisklik in de
+  editor -> **Run 'AdHocApiTest'**). Dit maakt automatisch een run-configuratie aan, en laat meteen
+  een (nog verkeerde) poging zien -- dat is prima, die gaan we zo aanvullen.
+- Ga naar het menu **Run** (bovenin) -> **Edit Configurations...**.
+- Selecteer `AdHocApiTest` in de lijst aan de linkerkant.
+- Zoek het veld **VM options**. Zie je dat veld niet, klik dan op **Modify options** (rechtsboven in
+  dat scherm) en vink **Add VM options** aan.
+- Typ in het VM options-veld (pas de bestandsnamen en het adres aan naar wat jij hebt):
+  ```
+  -Dopenapi.spec=mijn-api.yaml -Dapi.baseUrl=http://localhost:8080 -Dtestconfig.path=mijn-test-config.yaml
+  ```
+  (Laat `-Dtestconfig.path=...` weg als je stap 2 hebt overgeslagen.)
+- Controleer het veld **Working directory**: dat moet de map `examples` zijn (dus
+  `.../spring-api-testkit/examples`), anders vindt IntelliJ je spec-bestand niet. Klik op het
+  mapicoontje aan het eind van het veld om te wijzigen indien nodig.
+- Klik **Apply**, dan **OK**.
+
+**Stap 5 -- draaien**
+
+- Klik bovenin op het groene driehoekje (Run) naast de naam "AdHocApiTest" in de werkbalk.
+- Onderin verschijnt het testpaneel: je ziet een lijst met testnamen, elk met een groen vinkje
+  (geslaagd) of rood kruisje (mislukt).
+
+**Stap 6 -- een rode test lezen**
+
+- Klik op een testnaam met een rood kruisje.
+- Rechts (of onderin, afhankelijk van je indeling) verschijnt de volledige foutmelding: endpoint,
+  operationId, casetype, wat er verstuurd is, en verwacht-versus-werkelijk. Zie hoofdstuk 3 voor
+  hoe je dit leest.
+
+**Gebruik je Allure niet (bijvoorbeeld op een afgeschermd bedrijfsnetwerk)?** Als het project al
+succesvol is geopend/geïmporteerd in IntelliJ (dus als `mvn verify` via de terminal al werkte, al
+dan niet met `-P!allure-reporting`), heeft deze checklist daar verder niets extra's voor nodig --
+het groene driehoekje gebruikt gewoon de dependency's die IntelliJ al heeft ingeladen. Zie de
+sectie hierboven ("Werkt op mijn (bedrijfs)netwerk geen Allure?") als je nog niet zover was.
+
 ## 3. Rood en groen
 
 - **Groen** betekent: de test is geslaagd. Je API deed wat de spec beloofde.
